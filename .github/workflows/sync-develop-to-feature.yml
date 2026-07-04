@@ -7,6 +7,7 @@ on:
 
 permissions:
   contents: write
+  actions: write
 
 jobs:
   sync-branch:
@@ -29,12 +30,15 @@ jobs:
           
           # Attempt to merge the updated develop branch
           echo "Merging develop into feature/develop..."
-          git merge origin/develop --no-ff -m "chore: sync develop into feature/develop [skip ci]"
+          git merge origin/develop --no-ff -m "chore: sync develop into feature/develop"
           
           # Push the changes back to GitHub
           git push origin feature/develop
 
+<<<<<<< HEAD
           
+=======
+>>>>>>> 18f7bb6665eea88dc858fed5e8f01e906eb840ed
       - name: Trigger feature CI workflow
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
