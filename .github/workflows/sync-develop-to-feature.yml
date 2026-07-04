@@ -35,6 +35,6 @@ jobs:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
           echo "Waiting for GitHub to process the git push..."
-          sleep 5
+          sleep 30
           echo "Triggering the feature CI pipeline..."
           gh workflow run ci.yml --ref feature/develop
