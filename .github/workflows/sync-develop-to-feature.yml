@@ -26,10 +26,10 @@ jobs:
       - name: Merge develop into feature branch
         run: |
           git checkout feature/develop
-          git checkout origin/develop -- .github/workflows/sync-develop-to-feature.yml
+          git checkout --force origin/develop -- .github/workflows/sync-develop-to-feature.yml
           git add .github/workflows/sync-develop-to-feature.yml
           echo "Merging develop into feature/develop..."
-          git merge origin/develop --no-ff -m "chore: sync develop into feature/develop"
+          git merge --strategy-option=theirs origin/develop --no-ff -m "chore: sync develop into feature/develop"
           git push origin feature/develop
 
       - name: Trigger feature CI workflow
