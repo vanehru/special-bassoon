@@ -23,14 +23,12 @@ jobs:
           git config --global user.name "github-actions[bot]"
           git config --global user.email "41898282+github-actions[bot]@users.noreply.github.com"
 
-      - name: Merge develop into feature branch
+      - name: Sync develop into feature branch
         run: |
           git checkout feature/develop
-          git checkout --force origin/develop -- .github/workflows/sync-develop-to-feature.yml
-          git add .github/workflows/sync-develop-to-feature.yml
-          echo "Merging develop into feature/develop..."
-          git merge --strategy-option=theirs origin/develop --no-ff -m "chore: sync develop into feature/develop"
-          git push origin feature/develop
+          git fetch origin develop
+          git reset --hard origin/develop
+          git push --force-with-lease origin feature/develop
 
       - name: Trigger feature CI workflow
         env:
