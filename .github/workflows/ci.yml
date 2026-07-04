@@ -4,6 +4,7 @@ name: Feature Develop CI Pipeline
   push:
     branches:
       - feature/develop
+  workflow_dispatch:
 
 jobs:
   build-and-test:
