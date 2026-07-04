@@ -27,7 +27,7 @@ jobs:
         run: |
           git checkout feature/develop
           echo "Merging develop into feature/develop..."
-          git merge origin/develop --no-ff -m "chore: sync develop into feature/develop"
+          git merge -X theirs origin/develop --no-ff -m "chore: sync develop into feature/develop"
           git push origin feature/develop
 
       - name: Trigger feature CI workflow
