@@ -1,0 +1,32 @@
+name: Sync Develop to Feature Branch
+
+on:
+  push:
+    branches:
+      - develop
+
+jobs:
+  sync-branch:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0 # Fetches all history for all branches
+
+      - name: Set up Git Git Config
+        run: |
+          git config --global user.name "github-actions[bot]"
+          git config --global user.email "41898282+github-actions[bot]@users.noreply.github.com"
+
+      - name: Merge develop into feature branch
+        run: |
+          # Fetch and switch to the target feature branch
+          git checkout feature/develop
+          
+          # Attempt to merge the updated develop branch
+          echo "Merging develop into feature/develop..."
+          git merge origin/develop --no-ff -m "chore: sync develop into feature/develop [skip ci]"
+          
+          # Push the changes back to GitHub
+          git push origin feature/develop
