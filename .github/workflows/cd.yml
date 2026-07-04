@@ -3,8 +3,8 @@ name: Continuous Deployment
 on:
   workflow_dispatch:
     inputs:
-      ci_run_id:
-        description: 'CI workflow run ID to deploy (see Actions tab URL). Leave blank when redeploying from a fresh CI success.'
+      ci_run_number:
+        description: 'CI run # to redeploy, as shown in the Actions tab (e.g. 17, not the internal run ID). Leave blank to require a fresh CI success.'
         required: false
         default: ''
   workflow_run:
@@ -31,20 +31,39 @@ jobs:
     steps:
       - name: Resolve CI run to deploy
         id: resolve
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          RUN_NUMBER: ${{ github.event.inputs.ci_run_number }}
         run: |
-          run_id="${{ github.event.inputs.ci_run_id || github.event.workflow_run.id }}"
+          if [ -n "$RUN_NUMBER" ]; then
+            echo "Looking up CI run #$RUN_NUMBER via the GitHub API..."
+            run_json=$(gh api "repos/${{ github.repository }}/actions/workflows/ci.yml/runs?per_page=100" \
+              --jq "[.workflow_runs[] | select(.run_number == ${RUN_NUMBER})][0]")
+            run_id=$(echo "$run_json" | jq -r '.id // empty')
+            head_sha=$(echo "$run_json" | jq -r '.head_sha // empty')
+            if [ -z "$run_id" ]; then
+              echo "No CI run found with run number $RUN_NUMBER (check the Actions tab)." >&2
+              exit 1
+            fi
+          else
+            run_id="${{ github.event.workflow_run.id }}"
+            head_sha="${{ github.event.workflow_run.head_sha }}"
+          fi
           if [ -z "$run_id" ]; then
-            echo "workflow_dispatch requires ci_run_id when there is no workflow_run event." >&2
+            echo "workflow_dispatch requires ci_run_number when there is no workflow_run event." >&2
             exit 1
           fi
+          echo "Deploying artifact from CI run id $run_id (commit ${head_sha:-unknown})"
           echo "run_id=$run_id" >> "$GITHUB_OUTPUT"
+          echo "head_sha=$head_sha" >> "$GITHUB_OUTPUT"
 
       - name: Checkout code at CI commit
         uses: actions/checkout@v4
         with:
-          # workflow_run jobs default github.ref to the default branch, NOT the
-          # commit CI actually validated - pin explicitly to the CI run's head_sha.
-          ref: ${{ github.event.workflow_run.head_sha || github.sha }}
+          # workflow_run jobs default github.ref/github.sha to the default branch,
+          # NOT the commit that CI run actually validated - pin explicitly so an
+          # old redeploy checks out the old code, not today's develop tip.
+          ref: ${{ steps.resolve.outputs.head_sha || github.sha }}
 
       - name: Download build artifact from CI run
         uses: actions/download-artifact@v4
