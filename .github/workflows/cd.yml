@@ -1,0 +1,35 @@
+name: Continuous Deployment
+
+on:
+  workflow_run:
+    workflows:
+      - Feature Develop CI Pipeline
+    types:
+      - completed
+  workflow_dispatch:
+
+jobs:
+  deploy:
+    if: github.event.workflow_run.conclusion == 'success' && github.event.workflow_run.head_branch == 'feature/develop'
+    runs-on: ubuntu-latest
+
+    # You can define environment variables at the job level to reuse across steps
+    env:
+      DATABASE_HOST: ${{ vars.DB_HOST }}
+      DATABASE_NAME: ${{ vars.DB_NAME }}
+      DATABASE_USER: ${{ vars.DB_USER }}
+
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@v4
+
+      - name: Deploy to Environment
+        env:
+          # Injecting the secret safely into this specific execution step
+          DATABASE_PASSWORD: ${{ secrets.DB_PASSWORD }}
+        run: |
+          echo "Connecting to database host: $DATABASE_HOST"
+          echo "Using database: $DATABASE_NAME with user: $DATABASE_USER"
+          
+          # Your actual deployment or migration commands go here:
+          # e.g., my-deployment-script.sh --host $DATABASE_HOST --pass $DATABASE_PASSWORD
