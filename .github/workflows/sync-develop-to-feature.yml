@@ -7,16 +7,18 @@ on:
 
 permissions:
   contents: write
-  actions: write
 
 jobs:
   sync-branch:
     runs-on: ubuntu-latest
     steps:
       - name: Checkout repository
-        uses: actions/checkout@v5
+        uses: actions/checkout@v4
         with:
           fetch-depth: 0
+          # Use a Personal Access Token (PAT) with repo/write scope so the subsequent 
+          # push naturally triggers the target branch's CI workflow.
+          token: ${{ secrets.SYNC_WORKFLOW_PAT }} 
 
       - name: Configure git
         run: |
@@ -27,11 +29,20 @@ jobs:
         run: |
           git checkout feature/develop
           echo "Merging develop into feature/develop..."
-          git merge -X theirs origin/develop --no-ff -m "chore: sync develop into feature/develop"
+          
+          # Standard merge. Since history is now aligned via Step 1, this will run cleanly.
+          git merge origin/develop --no-ff -m "chore: sync develop into feature/develop"
+          
           git push origin feature/develop
 
       - name: Trigger feature CI workflow
         env:
+          # Note: If this fails with a '403: Resource not accessible by integration' error,
+          # it means your repository settings restrict GITHUB_TOKEN from triggering actions.
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
-          gh workflow run "Feature Develop CI Pipeline" --ref feature/develop
+          echo "Giving GitHub a brief moment to process the push..."
+          sleep 5
+          
+          echo "Triggering the feature CI pipeline..."
+          gh workflow run "ci.yml" --ref feature/develop
