@@ -7,6 +7,7 @@ on:
 
 permissions:
   contents: write
+  actions: write
 
 jobs:
   sync-branch:
@@ -33,3 +34,9 @@ jobs:
           
           # Push the changes back to GitHub
           git push origin feature/develop
+
+      - name: Trigger feature CI workflow
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          gh workflow run "Feature Develop CI Pipeline" --ref feature/develop
