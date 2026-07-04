@@ -7,10 +7,6 @@ name: Feature Develop CI Pipeline
 
 jobs:
   build-and-test:
-    # This prevents the CI from running if the commit message contains '[skip ci]' 
-    # (which our sync workflow uses) or if it's an automated sync commit.
-    if: "!contains(github.event.head_commit.message, '[skip ci]')"
-    
     runs-on: ubuntu-latest
 
     steps:

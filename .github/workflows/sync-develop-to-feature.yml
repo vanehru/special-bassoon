@@ -29,7 +29,7 @@ jobs:
           
           # Attempt to merge the updated develop branch
           echo "Merging develop into feature/develop..."
-          git merge origin/develop --no-ff -m "chore: sync develop into feature/develop [skip ci]"
+          git merge origin/develop --no-ff -m "chore: sync develop into feature/develop"
           
           # Push the changes back to GitHub
           git push origin feature/develop
