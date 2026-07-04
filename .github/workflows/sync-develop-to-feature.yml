@@ -14,9 +14,9 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Checkout repository
-        uses: actions/checkout@v4
+        uses: actions/checkout@v5
         with:
-          fetch-depth: 0  # No custom token needed here; uses default GITHUB_TOKEN automatically
+          fetch-depth: 0
 
       - name: Configure git
         run: |
@@ -26,6 +26,8 @@ jobs:
       - name: Merge develop into feature branch
         run: |
           git checkout feature/develop
+          git checkout origin/develop -- .github/workflows/sync-develop-to-feature.yml
+          git add .github/workflows/sync-develop-to-feature.yml
           echo "Merging develop into feature/develop..."
           git merge origin/develop --no-ff -m "chore: sync develop into feature/develop"
           git push origin feature/develop
