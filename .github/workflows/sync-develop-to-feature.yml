@@ -9,6 +9,10 @@ permissions:
   contents: write
   actions: write
 
+concurrency:
+  group: sync-feature-develop
+  cancel-in-progress: true
+
 jobs:
   sync-branch:
     runs-on: ubuntu-latest
@@ -24,17 +28,34 @@ jobs:
           git config --global user.email "41898282+github-actions[bot]@users.noreply.github.com"
 
       - name: Sync develop into feature branch
+        id: sync
         run: |
           git checkout feature/develop
           git fetch origin develop
           git reset --hard origin/develop
           git push --force-with-lease origin feature/develop
+          echo "synced_sha=$(git rev-parse HEAD)" >> "$GITHUB_OUTPUT"
+
+      - name: Wait for GitHub to register the push
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          expected="${{ steps.sync.outputs.synced_sha }}"
+          for i in $(seq 1 10); do
+            actual=$(gh api "repos/${{ github.repository }}/branches/feature/develop" --jq .commit.sha 2>/dev/null || echo "")
+            if [ "$actual" = "$expected" ]; then
+              echo "GitHub has registered the push ($actual)."
+              exit 0
+            fi
+            echo "Attempt $i: GitHub not yet updated, retrying in 5s..."
+            sleep 5
+          done
+          echo "Timed out waiting for GitHub to register the push." >&2
+          exit 1
 
       - name: Trigger feature CI workflow
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
-          echo "Waiting for GitHub to process the git push..."
-          sleep 30
           echo "Triggering the feature CI pipeline..."
           gh workflow run ci.yml --ref feature/develop
