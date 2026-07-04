@@ -1,5 +1,7 @@
 name: Feature Develop CI Pipeline
 
+run-name: "Feature CI - ${{ github.ref_name }} - run #${{ github.run_number }}"
+
 "on":
   push:
     branches:
