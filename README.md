@@ -1,8 +1,10 @@
 # special-bassoon
 
-# special-bassoon
-
 Got it. The sync workflow stays generic. For each project, you customize the CI workflow based on its technology stack.
+
+## Flow overview
+
+When a developer pushes changes to the develop branch, the sync workflow is triggered automatically. It updates the feature/develop branch to match the latest state of develop, pushes the updated branch to GitHub, and then dispatches the CI workflow for feature/develop. This ensures that the feature branch remains aligned with develop and that its latest changes are validated through the appropriate build and test pipeline.
 
 ## CI workflow setup by project type:
 
